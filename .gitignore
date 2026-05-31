@@ -1,0 +1,8 @@
+node_modules/
+.env
+.env.*
+!.env.example
+*.log
+*.pid
+preview-smoke.png
+sample-*.txt

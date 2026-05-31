@@ -1,0 +1,20 @@
+{
+  "name": "mylink",
+  "version": "1.0.0",
+  "description": "Application MyLink pour creer, enrichir et partager un profil professionnel a partir de reponses guidees ou d'un document de parcours.",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node server.mjs 8766",
+    "check": "node --check server.mjs",
+    "smoke": "node scripts/smoke-test.mjs"
+  },
+  "dependencies": {
+    "jszip": "^3.10.1",
+    "pdfjs-dist": "^5.6.205"
+  }
+}

@@ -10,6 +10,12 @@ const SECTION_TITLES = [
 ];
 
 const DEFAULT_BANNER = "linear-gradient(135deg,#111827 0%,#f97316 55%,#fed7aa 100%)";
+const BANNER_OPTIONS = [
+  DEFAULT_BANNER,
+  "linear-gradient(135deg,#0f172a 0%,#14b8a6 58%,#ccfbf1 100%)",
+  "linear-gradient(135deg,#1f2937 0%,#dc2626 55%,#fecaca 100%)",
+  "linear-gradient(135deg,#172554 0%,#2563eb 55%,#bfdbfe 100%)",
+];
 
 function slugify(value) {
   return String(value || "mon-profil")
@@ -262,6 +268,15 @@ async function extractDocumentText(file) {
   return cleanText(data.text || "");
 }
 
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 function IconHome({ className = "h-4 w-4" }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className} aria-hidden="true">
@@ -366,6 +381,14 @@ function DashboardPage({ profile, setProfile, setPage, loggedIn }) {
     }
   }
 
+  function cycleBanner() {
+    setDraft((current) => {
+      const active = current.generatedBanner || DEFAULT_BANNER;
+      const index = BANNER_OPTIONS.indexOf(active);
+      return { ...current, generatedBanner: BANNER_OPTIONS[(index + 1) % BANNER_OPTIONS.length] };
+    });
+  }
+
   return (
     <div className="mx-auto max-w-6xl px-5 py-10">
       <div className="mb-8 flex items-center justify-between">
@@ -381,12 +404,27 @@ function DashboardPage({ profile, setProfile, setPage, loggedIn }) {
               <h2 className="font-semibold text-slate-950">Photo et banniere</h2>
               <div className="mt-4 grid gap-4 sm:grid-cols-[220px_1fr]">
                 <div>
-                  <div className="flex aspect-square items-center justify-center rounded-3xl bg-slate-200 text-4xl font-semibold text-slate-700">{initials(draft.name)}</div>
-                  <button className="mt-4 w-full rounded-2xl border border-slate-300 px-4 py-3 font-semibold">Ajouter une photo</button>
+                  <div className="flex aspect-square items-center justify-center overflow-hidden rounded-3xl bg-slate-200 text-4xl font-semibold text-slate-700">
+                    {draft.photo ? <img src={draft.photo} alt={draft.name} className="h-full w-full object-cover" /> : initials(draft.name)}
+                  </div>
+                  <label className="mt-4 flex w-full cursor-pointer items-center justify-center rounded-2xl border border-slate-300 px-4 py-3 font-semibold">
+                    Ajouter une photo
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (event) => {
+                        const nextFile = event.target.files?.[0];
+                        if (!nextFile) return;
+                        const photo = await fileToDataUrl(nextFile);
+                        setDraft((current) => ({ ...current, photo }));
+                      }}
+                    />
+                  </label>
                 </div>
                 <div>
                   <div className="h-44 rounded-3xl" style={{ background: draft.generatedBanner || DEFAULT_BANNER }} />
-                  <button className="mt-4 w-full rounded-2xl border border-slate-300 px-4 py-3 font-semibold">Modifier la banniere</button>
+                  <button onClick={cycleBanner} className="mt-4 w-full rounded-2xl border border-slate-300 px-4 py-3 font-semibold">Modifier la banniere</button>
                 </div>
               </div>
             </Card>
@@ -443,7 +481,11 @@ function ProfileCard({ profile }) {
     <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
       <div className="h-48" style={{ background: safe.generatedBanner || DEFAULT_BANNER }} />
       <div className="p-6">
-        <div className="-mt-20 flex h-32 w-32 items-center justify-center rounded-3xl border-4 border-white bg-slate-200 text-4xl font-semibold text-slate-700 shadow-md">{initials(safe.name)}</div>
+        {safe.photo ? (
+          <img src={safe.photo} alt={safe.name} className="-mt-20 h-32 w-32 rounded-3xl border-4 border-white object-cover shadow-md" />
+        ) : (
+          <div className="-mt-20 flex h-32 w-32 items-center justify-center rounded-3xl border-4 border-white bg-slate-200 text-4xl font-semibold text-slate-700 shadow-md">{initials(safe.name)}</div>
+        )}
         <h2 className="mt-4 text-3xl font-bold text-slate-950">{safe.name}</h2>
         <p className="mt-1 font-semibold text-orange-500">{safe.title}</p>
         <p className="mt-4 rounded-3xl bg-slate-50 p-4 italic leading-7 text-slate-700">"{safe.tagline}"</p>
